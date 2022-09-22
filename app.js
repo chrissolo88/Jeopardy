@@ -19,6 +19,7 @@
 //  ]
 
 let categories = [];
+let playerScore = 0
 
 async function getCategoryIds() {
     const NUM_CATEGORIES = 6;
@@ -69,7 +70,7 @@ async function fillTable(categories) {
     for (let clueIdx = 0; clueIdx < categories[0].clues.length; clueIdx++) {
         let $tr = $('<tr>');
         for (let catIdx = 0; catIdx < categories.length; catIdx++) {
-          $tr.append($("<td>").attr({"id": `${catIdx}-${clueIdx}`,'class':'bg-primary text-white','data-toggle':'modal','data-target':'#qModal'}).text(`$${clueIdx + 1}00`));
+          $tr.append($("<td>").attr({"id": `${catIdx}-${clueIdx}`,'class':'bg-primary text-white','data-toggle':'modal','data-target':'#qModal'}).html(`$<span>${clueIdx + 1}00</span>`));
         }
         $questions.append($tr)
     }
@@ -91,32 +92,24 @@ function handleClick(evt) {
     let question = clue.question;
     let answer = clue.answer;
   
-    // if (!clue.showing) {
-    //     question = clue.question;
-    //     clue.showing = "question";
-    // } else if (clue.showing === "question") {
-    //     question = clue.answer;
-    //     clue.showing = "answer";
-    // } else {
-    //     return
-    // }
     $('#your-answer').val('')
-    // Update text of cell
     $('#answer-btn').removeClass('collapse')
     $('.input-group').removeClass('collapse')
     $('#title-modal').html(`${categories[catId].title} - ${evt.target.innerText}`)
     $(`#question-modal`).html(question);
     $('#answer-btn').on('click',() =>{
         const yourAnswer = $('#your-answer').val()
-        console.log(yourAnswer,answer,answer.includes(yourAnswer))
-        if(yourAnswer == answer){
+        if(answer.toUpperCase().includes(yourAnswer.toUpperCase())){
             $(`#question-modal`).html(`<p>${answer}</p><p class="text-success">${yourAnswer}</p>`);
             evt.target.classList.add('bg-success')
             evt.target.classList.remove('bg-primary')
+            playerScore += parseInt($(evt.target).children('#score').text)
+            console.log($(evt.target).children('span'))
         } else {
             $(`#question-modal`).html(`<p>${answer}</p><p class="text-danger">${yourAnswer}</p>`);
             evt.target.classList.add('bg-danger')
             evt.target.classList.remove('bg-primary')
+            console.log($(evt.target).children('span'))
         }
         $('.input-group').addClass('collapse')
         $('#answer-btn').addClass('collapse')
