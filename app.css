@@ -1,3 +1,9 @@
-td:hover {
+td.bg-primary:hover {
     background-color: rgba(88, 155, 255, 0.671) !important;
+}
+
+#questions{
+    line-height: 70px;
+    min-height: 25px;
+    height: 70px;
 }

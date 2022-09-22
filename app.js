@@ -63,7 +63,7 @@ async function fillTable(categories) {
     $titles.empty();
     $questions.empty();
     for(let cat of categories){
-        $tr.append($('<th>').attr({'scope':'col','class':'bg-primary text-white'}).text(cat.title))
+        $tr.append($('<th>').attr({'scope':'col','class':'bg-primary text-white text-capitalize font-weight-bold'}).text(cat.title))
     }
     $titles.append($tr)
     console.log(categories[0].clues.length)
@@ -71,27 +71,21 @@ async function fillTable(categories) {
         let $tr = $('<tr>');
         for (let catIdx = 0; catIdx < categories.length; catIdx++) {
             let $td = $('<td>');
-            $td.attr({"id": `${catIdx}-${clueIdx}`,'class':'bg-primary text-white','data-toggle':'modal','data-target':'#qModal'}).html(`$<span id="score">${clueIdx + 1}00</span>`)
+            $td.attr({"id": `${catIdx}-${clueIdx}`,'class':'bg-primary text-white font-weight-bold','data-toggle':'modal','data-target':'#qModal'}).html(`$<span id="score">${clueIdx + 1}00</span>`)
             $td.on("click", handleClick);
             $tr.append($td)
         }
         $questions.append($tr)
     }
+    hideLoadingView()
 }
 
-/** Handle clicking on a clue: show the question or answer.
- *
- * Uses .showing property on clue to determine what to show:
- * - if currently null, show question & set .showing to "question"
- * - if currently "question", show answer & set .showing to "answer"
- * - if currently "answer", ignore click
- * */
 
 function handleClick(evt) {
     const $trgt = $(evt.target).closest('td');
     const [catId, clueId] = $trgt.attr('id').split("-");
     const {question, answer} = categories[catId].clues[clueId];
-  
+    $trgt.off('click')
     $('#your-answer').val('')
     $('#close-btn').addClass('collapse')
     $('#answer-btn').removeClass('collapse')
@@ -100,7 +94,6 @@ function handleClick(evt) {
     $(`#question-modal`).html(question);
     $('#answer-btn').unbind().click(() =>{
         const yourAnswer = $('#your-answer').val()
-        console.log(yourAnswer)
         if(yourAnswer == ''){
             return
         } else {
@@ -118,11 +111,11 @@ function handleClick(evt) {
             $trgt.hasClass('bg-success') ? pScore += parseInt($trgt.children('#score')[0].textContent) 
             : $trgt.hasClass('bg-danger') ? pScore -= parseInt($trgt.children('#score')[0].textContent) 
             : pScore;
-            console.log(pScore);
+            $trgt.removeAttr('data-toggle')
             updateScore();
         }
     })
- 
+
 }
 
 
@@ -132,22 +125,19 @@ const updateScore = () => $('#score').text(pScore)
  */
 
 function showLoadingView() {
-
+    $('#start').attr('disabled')
+    $('#start').html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> | Loading...')
 }
 
 /** Remove the loading spinner and update the button used to fetch data. */
 
 function hideLoadingView() {
+    $('#start').removeAttr('disabled')
+    $('#start').html('New Game')
 }
 
-/** Start game:
- *
- * - get random category Ids
- * - get data for each category
- * - create HTML table
- * */
-
 async function setupAndStart() {
+    showLoadingView()
     categories = [];
     const catIds = await getCategoryIds();
     for(let catId of catIds){
@@ -158,11 +148,10 @@ async function setupAndStart() {
 
 /** On click of start / restart button, set up game. */
 $('#start').on('click', setupAndStart)
-// TODO
 
-/** On page load, add event handler for clicking clues */
+
+
 $(async function () {
     setupAndStart();
   }
 );
-// TODO
