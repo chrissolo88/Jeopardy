@@ -19,7 +19,7 @@
 //  ]
 
 let categories = [];
-let playerScore = 0
+let pScore = 0
 
 async function getCategoryIds() {
     const NUM_CATEGORIES = 6;
@@ -70,7 +70,10 @@ async function fillTable(categories) {
     for (let clueIdx = 0; clueIdx < categories[0].clues.length; clueIdx++) {
         let $tr = $('<tr>');
         for (let catIdx = 0; catIdx < categories.length; catIdx++) {
-          $tr.append($("<td>").attr({"id": `${catIdx}-${clueIdx}`,'class':'bg-primary text-white','data-toggle':'modal','data-target':'#qModal'}).html(`$<span>${clueIdx + 1}00</span>`));
+            let $td = $('<td>');
+            $td.attr({"id": `${catIdx}-${clueIdx}`,'class':'bg-primary text-white','data-toggle':'modal','data-target':'#qModal'}).html(`$<span id="score">${clueIdx + 1}00</span>`)
+            $td.on("click", handleClick);
+            $tr.append($td)
         }
         $questions.append($tr)
     }
@@ -85,38 +88,45 @@ async function fillTable(categories) {
  * */
 
 function handleClick(evt) {
-    const id = evt.target.id;
-    const [catId, clueId] = id.split("-");
-    const clue = categories[catId].clues[clueId];
-  
-    let question = clue.question;
-    let answer = clue.answer;
+    const $trgt = $(evt.target).closest('td');
+    const [catId, clueId] = $trgt.attr('id').split("-");
+    const {question, answer} = categories[catId].clues[clueId];
   
     $('#your-answer').val('')
+    $('#close-btn').addClass('collapse')
     $('#answer-btn').removeClass('collapse')
     $('.input-group').removeClass('collapse')
-    $('#title-modal').html(`${categories[catId].title} - ${evt.target.innerText}`)
+    $('#title-modal').html(`${categories[catId].title} - ${$trgt.text()}`)
     $(`#question-modal`).html(question);
-    $('#answer-btn').on('click',() =>{
+    $('#answer-btn').unbind().click(() =>{
         const yourAnswer = $('#your-answer').val()
-        if(answer.toUpperCase().includes(yourAnswer.toUpperCase())){
-            $(`#question-modal`).html(`<p>${answer}</p><p class="text-success">${yourAnswer}</p>`);
-            evt.target.classList.add('bg-success')
-            evt.target.classList.remove('bg-primary')
-            playerScore += parseInt($(evt.target).children('#score').text)
-            console.log($(evt.target).children('span'))
+        console.log(yourAnswer)
+        if(yourAnswer == ''){
+            return
         } else {
-            $(`#question-modal`).html(`<p>${answer}</p><p class="text-danger">${yourAnswer}</p>`);
-            evt.target.classList.add('bg-danger')
-            evt.target.classList.remove('bg-primary')
-            console.log($(evt.target).children('span'))
+            $trgt.removeClass('bg-primary')
+            if(answer.toUpperCase().includes(yourAnswer.toUpperCase())){
+                $(`#question-modal`).html(`<p>${answer}</p><p class="text-success">${yourAnswer}</p>`);
+                $trgt.addClass('bg-success')
+            } else {
+                $(`#question-modal`).html(`<p>${answer}</p><p class="text-danger">${yourAnswer}</p>`);
+                $trgt.addClass('bg-danger')
+            }
+            $('#close-btn').removeClass('collapse')
+            $('.input-group').addClass('collapse')
+            $('#answer-btn').addClass('collapse')
+            $trgt.hasClass('bg-success') ? pScore += parseInt($trgt.children('#score')[0].textContent) 
+            : $trgt.hasClass('bg-danger') ? pScore -= parseInt($trgt.children('#score')[0].textContent) 
+            : pScore;
+            console.log(pScore);
+            updateScore();
         }
-        $('.input-group').addClass('collapse')
-        $('#answer-btn').addClass('collapse')
-
     })
+ 
 }
 
+
+const updateScore = () => $('#score').text(pScore)
 /** Wipe the current Jeopardy board, show the loading spinner,
  * and update the button used to fetch data.
  */
@@ -153,7 +163,6 @@ $('#start').on('click', setupAndStart)
 /** On page load, add event handler for clicking clues */
 $(async function () {
     setupAndStart();
-    $("#jeopardy").on("click", "td", handleClick);
   }
 );
 // TODO
